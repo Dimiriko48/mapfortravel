@@ -26,6 +26,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -39,6 +40,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private static final int PICK_IMAGE_REQUEST = 2;
     private static final int FINE_PERMISSION_CODE = 100;
     private GoogleMap mMap;
+    private boolean isSatelliteView = false;
+    private boolean isAddingMarker = false;
     private FusedLocationProviderClient fusedLocationClient;
     private Uri selectedImageUri;
     private ImageView photoImageView;
@@ -61,7 +64,21 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         addMarkerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showMarkerDialog();
+                isAddingMarker = true;
+                Toast.makeText(MainActivity.this, "Tap on the map to add a marker", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        Button btnChangeStyle = findViewById(R.id.btnChangeStyle);
+        btnChangeStyle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (isSatelliteView) {
+                    mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+                } else {
+                    mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+                }
+                isSatelliteView = !isSatelliteView;
             }
         });
 
@@ -74,6 +91,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onMapReady(@NonNull GoogleMap googleMap) {
         mMap = googleMap;
+
+        // Установка начального стиля карты
+        mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
 
         // Проверка разрешений
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -93,6 +113,30 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         }
                     }
                 });
+
+        // Обработка касания карты для добавления метки
+        mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+            @Override
+            public void onMapClick(LatLng point) {
+                if (isAddingMarker) {
+                    isAddingMarker = false;
+                    showMarkerDialog(point);
+                }
+            }
+        });
+
+        // Добавление слушателя щелчка по маркеру для отображения фотографии
+        mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(Marker marker) {
+                // Показать окно с фотографией, если она добавлена
+                Uri tagUri = (Uri) marker.getTag();
+                if (tagUri != null) {
+                    showPhotoDialog(tagUri);
+                }
+                return false;
+            }
+        });
     }
 
     @Override
@@ -123,7 +167,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    private void showMarkerDialog() {
+    private void showMarkerDialog(final LatLng point) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         LayoutInflater inflater = this.getLayoutInflater();
         View dialogView = inflater.inflate(R.layout.marker_dialog, null);
@@ -142,11 +186,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         builder.setPositiveButton("Add Marker", (dialog, id) -> {
             String note = noteEditText.getText().toString();
-            addMarker(note, selectedImageUri);
+            addMarker(point, note, selectedImageUri);
         });
 
         builder.setNegativeButton("Cancel", (dialog, id) -> dialog.cancel());
-
         AlertDialog dialog = builder.create();
         dialog.show();
     }
@@ -171,26 +214,40 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    private void addMarker(String note, Uri imageUri) {
+    private void addMarker(LatLng point, String note, Uri imageUri) {
         if (mMap != null) {
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this,new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, FINE_PERMISSION_CODE);
-                return;
+            MarkerOptions markerOptions = new MarkerOptions().position(point).title(note);
+            if (imageUri != null) {
+                // Если фотография добавлена, устанавливаем зеленый цвет метки
+                markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
+            } else {
+                // Если фотография отсутствует, устанавливаем красный цвет метки
+                markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
             }
-            fusedLocationClient.getLastLocation()
-                    .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                        @Override
-                        public void onSuccess(Location location) {
-                            if (location != null) {
-                                LatLng currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
-                                MarkerOptions markerOptions = new MarkerOptions().position(currentLocation).title(note);
-                                Marker marker = mMap.addMarker(markerOptions);
-                                if (marker != null) {
-                                    marker.setTag(imageUri);
-                                }
-                            }
-                        }
-                    });
+            Marker marker = mMap.addMarker(markerOptions);
+            if (marker != null) {
+                marker.setTag(imageUri);
+            }
         }
+    }
+
+    private void showPhotoDialog(Uri imageUri) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        LayoutInflater inflater = this.getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.photo_dialog, null);
+        builder.setView(dialogView);
+
+        ImageView imageView = dialogView.findViewById(R.id.dialog_photo_image_view);
+        try {
+            Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
+            imageView.setImageBitmap(bitmap);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        builder.setPositiveButton("Close", (dialog, id) -> dialog.dismiss());
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 }
