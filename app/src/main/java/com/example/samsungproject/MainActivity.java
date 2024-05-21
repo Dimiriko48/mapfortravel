@@ -55,7 +55,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
-        // Инициализация карты
+        // "Инициализация карты"
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         if (mapFragment != null) {
@@ -96,7 +96,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
 
-        // Проверка и запрос разрешений
+        // "Проверка и запрос разрешений"
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
         }
@@ -106,17 +106,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onMapReady(@NonNull GoogleMap googleMap) {
         mMap = googleMap;
 
-        // Установка начального стиля карты
-        mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+        // "Установка начального стиля карты"
+        mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE); // Устанавливаем спутниковый вид по умолчанию
 
-        // Проверка разрешений
+        // "Проверка разрешений"
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
             return;
         }
         mMap.setMyLocationEnabled(true);
 
-        // Получение текущей локации и установка метки
+        // "Получение текущей локации и установка метки"
         fusedLocationClient.getLastLocation()
                 .addOnSuccessListener(this, new OnSuccessListener<Location>() {
                     @Override
@@ -128,7 +128,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     }
                 });
 
-        // Обработка касания карты для добавления метки
+        // "Обработка касания карты для добавления метки"
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng point) {
@@ -139,17 +139,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
 
-        // Добавление слушателя щелчка по маркеру для отображения фотографии
+        // "Добавление слушателя щелчка по маркеру для отображения фотографии"
         mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
-                selectedMarker = marker; // Save the selected marker for deletion
+                selectedMarker = marker; // Сохраняем выбранную метку для удаления
                 String tag = (String) marker.getTag();
                 if (tag != null) {
                     Uri tagUri = Uri.parse(tag);
                     showPhotoDialog(tagUri);
                 }
-                showDeleteMarkerToast(); // Show toast when marker is selected
+                showDeleteMarkerToast(); // Показываем тост при выборе метки
                 return true;
             }
 
@@ -161,11 +161,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Разрешение предоставлено, включаем myLocation layer
+                // "Разрешение предоставлено, включаем myLocation layer"
                 if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                     mMap.setMyLocationEnabled(true);
 
-                    // Получение текущей локации и установка метки
+                    // "Получение текущей локации и установка метки"
                     fusedLocationClient.getLastLocation()
                             .addOnSuccessListener(this, new OnSuccessListener<Location>() {
                                 @Override
@@ -178,7 +178,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             });
                 }
             } else {
-                // Разрешение не предоставлено, выводим сообщение пользователю
+                // "Разрешение не предоставлено, выводим сообщение пользователю"
                 Toast.makeText(this, "Location permission is required to show your location on the map.", Toast.LENGTH_SHORT).show();
             }
         }
@@ -201,14 +201,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
 
-        builder.setPositiveButton("Add Marker", (dialog, id) -> {
+        builder.setPositiveButton("Add marker", (dialog, id) -> {
             String note = noteEditText.getText().toString();
             addMarker(point, note, selectedImageUri);
-            selectedImageUri = null; // Reset the selected image URI after adding the marker
+            selectedImageUri = null; // Сброс выбранного изображения после добавления метки
         });
 
         builder.setNegativeButton("Cancel", (dialog, id) -> {
-            selectedImageUri = null; // Reset the selected image URI when cancelling
+            selectedImageUri = null; // Сброс выбранного изображения при отмене
             dialog.cancel();
         });
 
@@ -251,7 +251,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-
     private void showPhotoDialog(Uri imageUri) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         LayoutInflater inflater = this.getLayoutInflater();
@@ -276,8 +275,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         Toast.makeText(this, "Marker selected.", Toast.LENGTH_SHORT).show();
     }
 
-
-
     private void showDeleteMarkerConfirmation() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage("Are you sure you want to delete this marker?")
@@ -285,7 +282,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     public void onClick(DialogInterface dialog, int id) {
                         if (selectedMarker != null) {
                             selectedMarker.remove();
-                            selectedMarker = null; // Reset selected marker after deletion
+                            selectedMarker = null; // Сброс выбранной метки после удаления
                         }
                     }
                 })
@@ -297,4 +294,3 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         builder.create().show();
     }
 }
-
