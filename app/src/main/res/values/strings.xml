@@ -1,4 +1,12 @@
 <resources>
     <string name="app_name">SAMSUNGPROJECT</string>
     <string name="my_api_key">AIzaSyCxGbd7w1diBrYQQx2NVdi20QXE6xI1Wr0</string>
+    <string name="appname">finaly</string>
+    <string name="log_in">Log in</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="Login">Login</string>
+    <string name="Back">Back</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="username">Username</string>
 </resources>
