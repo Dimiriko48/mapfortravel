@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1072359324025",
+    "project_id": "mapfortravel-ed63c",
+    "storage_bucket": "mapfortravel-ed63c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1072359324025:android:2086b99fed1694d9b8d7a8",
+        "android_client_info": {
+          "package_name": "com.example.samsungproject"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDE7oCUgI40Ya8NYxGggAfZbyVfqhhExv8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
