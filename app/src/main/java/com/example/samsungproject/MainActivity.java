@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -45,6 +46,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private FusedLocationProviderClient fusedLocationClient;
     private Uri selectedImageUri;
     private ImageView photoImageView;
+    private Marker selectedMarker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,6 +81,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
                 }
                 isSatelliteView = !isSatelliteView;
+            }
+        });
+
+        Button deleteMarkerButton = findViewById(R.id.delete_marker_button);
+        deleteMarkerButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (selectedMarker != null) {
+                    showDeleteMarkerConfirmation();
+                } else {
+                    Toast.makeText(MainActivity.this, "No marker selected to delete", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
@@ -129,13 +143,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
-                // Показать окно с фотографией, если она добавлена
-                Uri tagUri = (Uri) marker.getTag();
-                if (tagUri != null) {
+                selectedMarker = marker; // Save the selected marker for deletion
+                String tag = (String) marker.getTag();
+                if (tag != null) {
+                    Uri tagUri = Uri.parse(tag);
                     showPhotoDialog(tagUri);
                 }
-                return false;
+                showDeleteMarkerToast(); // Show toast when marker is selected
+                return true;
             }
+
         });
     }
 
@@ -187,9 +204,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         builder.setPositiveButton("Add Marker", (dialog, id) -> {
             String note = noteEditText.getText().toString();
             addMarker(point, note, selectedImageUri);
+            selectedImageUri = null; // Reset the selected image URI after adding the marker
         });
 
-        builder.setNegativeButton("Cancel", (dialog, id) -> dialog.cancel());
+        builder.setNegativeButton("Cancel", (dialog, id) -> {
+            selectedImageUri = null; // Reset the selected image URI when cancelling
+            dialog.cancel();
+        });
+
         AlertDialog dialog = builder.create();
         dialog.show();
     }
@@ -218,18 +240,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         if (mMap != null) {
             MarkerOptions markerOptions = new MarkerOptions().position(point).title(note);
             if (imageUri != null) {
-                // Если фотография добавлена, устанавливаем зеленый цвет метки
                 markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
             } else {
-                // Если фотография отсутствует, устанавливаем красный цвет метки
                 markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
             }
             Marker marker = mMap.addMarker(markerOptions);
             if (marker != null) {
-                marker.setTag(imageUri);
+                marker.setTag(imageUri != null ? imageUri.toString() : null);
             }
         }
     }
+
 
     private void showPhotoDialog(Uri imageUri) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -250,4 +271,30 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         AlertDialog dialog = builder.create();
         dialog.show();
     }
+
+    private void showDeleteMarkerToast() {
+        Toast.makeText(this, "Marker selected.", Toast.LENGTH_SHORT).show();
+    }
+
+
+
+    private void showDeleteMarkerConfirmation() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("Are you sure you want to delete this marker?")
+                .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        if (selectedMarker != null) {
+                            selectedMarker.remove();
+                            selectedMarker = null; // Reset selected marker after deletion
+                        }
+                    }
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.dismiss();
+                    }
+                });
+        builder.create().show();
+    }
 }
+

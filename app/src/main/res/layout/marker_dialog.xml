@@ -3,8 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="16dp"
-    android:background="@drawable/rounded_background">
+    android:padding="16dp">
 
     <EditText
         android:id="@+id/note_edit_text"
@@ -14,17 +13,15 @@
 
     <Button
         android:id="@+id/add_photo_button"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Add Photo"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="16dp"
-        android:backgroundTint="#00008B"/>
+        android:text="Add Photo" />
 
     <ImageView
         android:id="@+id/photo_image_view"
         android:layout_width="match_parent"
         android:layout_height="200dp"
-        android:layout_marginTop="16dp"
-        android:visibility="gone" />
+        android:scaleType="centerCrop"
+        android:visibility="gone"
+        android:layout_marginTop="16dp" />
 </LinearLayout>
